@@ -7,20 +7,24 @@ export interface SchedulerConfig {
   priceFetcher: PriceFetcher;
   publisher: SorobanPublisher;
   cronExpression?: string;
+  intervalSeconds?: number; // Alternative to cron: interval in seconds
   logLevel?: string;
 }
 
 export class OracleScheduler {
   private priceFetcher: PriceFetcher;
   private publisher: SorobanPublisher;
-  private cronExpression: string;
+  private cronExpression: string | null;
+  private intervalSeconds: number | null;
   private logLevel: string;
   private cronJob: cron.ScheduledTask | null = null;
+  private intervalId: NodeJS.Timeout | null = null;
 
   constructor(config: SchedulerConfig) {
     this.priceFetcher = config.priceFetcher;
     this.publisher = config.publisher;
-    this.cronExpression = config.cronExpression || "*/5 * * * *"; // Every 5 minutes
+    this.cronExpression = config.cronExpression || null;
+    this.intervalSeconds = config.intervalSeconds || null;
     this.logLevel = config.logLevel || "info";
   }
 
@@ -99,42 +103,72 @@ export class OracleScheduler {
   }
 
   /**
-   * Start the cron scheduler
+   * Start the scheduler (cron or interval based)
    */
   start(): void {
-    if (this.cronJob) {
+    if (this.cronJob || this.intervalId) {
       this.log("warn", "Scheduler is already running");
       return;
     }
 
-    this.log(
-      "info",
-      `Starting scheduler with cron expression: ${this.cronExpression}`
-    );
-
-    this.cronJob = cron.schedule(this.cronExpression, async () => {
-      await this.executeUpdate();
-    });
-
-    // Execute immediately on start (optional)
-    this.executeUpdate().catch((error) => {
+    // Use interval in seconds if provided (for testing)
+    if (this.intervalSeconds && this.intervalSeconds > 0) {
       this.log(
-        "error",
-        `Initial update failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        "info",
+        `Starting scheduler with interval: ${this.intervalSeconds} seconds`
       );
-    });
+
+      this.intervalId = setInterval(async () => {
+        await this.executeUpdate();
+      }, this.intervalSeconds * 1000);
+
+      // Execute immediately on start (optional)
+      this.executeUpdate().catch((error) => {
+        this.log(
+          "error",
+          `Initial update failed: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      });
+    } else if (this.cronExpression) {
+      // Use cron expression if provided
+      this.log(
+        "info",
+        `Starting scheduler with cron expression: ${this.cronExpression}`
+      );
+
+      this.cronJob = cron.schedule(this.cronExpression, async () => {
+        await this.executeUpdate();
+      });
+
+      // Execute immediately on start (optional)
+      this.executeUpdate().catch((error) => {
+        this.log(
+          "error",
+          `Initial update failed: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      });
+    } else {
+      this.log("error", "No cron expression or interval specified");
+    }
   }
 
   /**
-   * Stop the cron scheduler
+   * Stop the scheduler
    */
   stop(): void {
     if (this.cronJob) {
       this.cronJob.stop();
       this.cronJob = null;
-      this.log("info", "Scheduler stopped");
+      this.log("info", "Scheduler stopped (cron)");
+    }
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+      this.log("info", "Scheduler stopped (interval)");
     }
   }
 

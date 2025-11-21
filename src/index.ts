@@ -40,7 +40,10 @@ const publisher = new SorobanPublisher(
 const scheduler = new OracleScheduler({
   priceFetcher,
   publisher,
-  cronExpression: "*/5 * * * *", // Every 5 minutes
+  // For testing: run every 5 seconds
+  intervalSeconds: 5,
+  // For production: use cron expression every 5 minutes
+  // cronExpression: "*/5 * * * *", // Every 5 minutes
   logLevel: process.env.LOG_LEVEL || "info",
 });
 

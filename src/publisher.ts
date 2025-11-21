@@ -1,11 +1,14 @@
-import {
-  Contract,
-  Networks,
-  SorobanRpc,
-  Keypair,
-  TransactionBuilder,
-  xdr,
-} from "@stellar/stellar-sdk";
+// TODO: Uncomment when implementing actual Soroban contract interaction
+// import {
+//   Contract,
+//   Networks,
+//   SorobanRpc,
+//   Keypair,
+//   TransactionBuilder,
+//   xdr,
+// } from "@stellar/stellar-sdk";
+
+import { Networks, Keypair } from "@stellar/stellar-sdk";
 
 export interface PublishParams {
   assetId: string;
@@ -22,8 +25,9 @@ export interface PublishResult {
 export class SorobanPublisher {
   private rpcUrl: string;
   private contractId: string;
-  private keypair: Keypair;
-  private server: SorobanRpc.Server;
+  private keypair: Keypair | null;
+  private publicKey: string;
+  // private server: SorobanRpc.Server; // TODO: Uncomment when implementing
   private networkPassphrase: string;
   private maxRetries: number = 3;
   private retryDelay: number = 2000; // 2 seconds
@@ -31,10 +35,32 @@ export class SorobanPublisher {
   constructor(rpcUrl: string, contractId: string, secretKey: string) {
     this.rpcUrl = rpcUrl;
     this.contractId = contractId;
-    this.keypair = Keypair.fromSecret(secretKey);
-    this.server = new SorobanRpc.Server(rpcUrl, {
-      allowHttp: rpcUrl.startsWith("http://"),
-    });
+
+    // Only create Keypair if secret key is valid and not empty
+    // Since we're in logging mode, we don't strictly need it
+    if (secretKey && secretKey.trim() !== "") {
+      try {
+        this.keypair = Keypair.fromSecret(secretKey);
+        this.publicKey = this.keypair.publicKey();
+      } catch (error) {
+        console.warn(
+          "[PUBLISHER] Invalid secret key format. Using empty placeholder for logging mode."
+        );
+        this.keypair = null;
+        this.publicKey = "(invalid key)";
+      }
+    } else {
+      console.warn(
+        "[PUBLISHER] Secret key not provided. Using placeholder for logging mode."
+      );
+      this.keypair = null;
+      this.publicKey = "(no key provided)";
+    }
+
+    // TODO: Uncomment when implementing actual Soroban interaction
+    // this.server = new SorobanRpc.Server(rpcUrl, {
+    //   allowHttp: rpcUrl.startsWith("http://"),
+    // });
 
     // Determine network passphrase based on RPC URL
     if (rpcUrl.includes("futurenet")) {
@@ -67,33 +93,56 @@ export class SorobanPublisher {
     }
   }
 
+  // TODO: Uncomment when implementing actual Soroban contract interaction
   /**
    * Convert string to Soroban ScVal
    */
-  private stringToScVal(value: string): xdr.ScVal {
-    return xdr.ScVal.scvString(value);
-  }
+  // private stringToScVal(value: string): xdr.ScVal {
+  //   return xdr.ScVal.scvString(value);
+  // }
 
   /**
    * Convert number to Soroban ScVal (i128)
    */
-  private numberToScVal(value: number): xdr.ScVal {
-    const valueBigInt = BigInt(value);
-    const hi = valueBigInt >> BigInt(64);
-    const lo = valueBigInt & BigInt("0xFFFFFFFFFFFFFFFF");
-    return xdr.ScVal.scvI128(
-      new xdr.Int128Parts({
-        hi: xdr.Int64.fromString(hi.toString()),
-        lo: xdr.Uint64.fromString(lo.toString()),
-      })
-    );
-  }
+  // private numberToScVal(value: number): xdr.ScVal {
+  //   const valueBigInt = BigInt(value);
+  //   const hi = valueBigInt >> BigInt(64);
+  //   const lo = valueBigInt & BigInt("0xFFFFFFFFFFFFFFFF");
+  //   return xdr.ScVal.scvI128(
+  //     new xdr.Int128Parts({
+  //       hi: xdr.Int64.fromString(hi.toString()),
+  //       lo: xdr.Uint64.fromString(lo.toString()),
+  //     })
+  //   );
+  // }
 
   /**
    * Publish price data to Soroban contract
+   * TODO: Implement actual Soroban contract interaction
+   * Currently only logs the data that would be published
    */
   async publishToOracle(params: PublishParams): Promise<PublishResult> {
     return this.retry(async () => {
+      // Log the data that would be published
+      console.log("[PUBLISHER] Would publish to Oracle contract:");
+      console.log(`  Contract ID: ${this.contractId}`);
+      console.log(`  RPC URL: ${this.rpcUrl}`);
+      console.log(`  Network: ${this.networkPassphrase}`);
+      console.log(`  Asset ID: ${params.assetId}`);
+      console.log(`  Price: ${params.price} (${params.price / 1e7} raw)`);
+      console.log(
+        `  Timestamp: ${params.timestamp} (${new Date(
+          params.timestamp * 1000
+        ).toISOString()})`
+      );
+      console.log(`  Commit: ${params.commit}`);
+      console.log(`  Signer: ${this.publicKey}`);
+
+      // Simulate transaction hash
+      const mockTxHash = "0".repeat(64); // Mock 64-char hex hash
+
+      // TODO: Uncomment and implement actual Soroban transaction
+      /*
       const contract = new Contract(this.contractId);
       const sourceAccount = await this.server.getAccount(
         this.keypair.publicKey()
@@ -193,6 +242,15 @@ export class SorobanPublisher {
 
       return {
         txHash: sendResult.hash,
+        success: true,
+      };
+      */
+
+      console.log(`[PUBLISHER] Mock transaction hash: ${mockTxHash}`);
+      console.log("[PUBLISHER] (No actual transaction sent - logging only)");
+
+      return {
+        txHash: mockTxHash,
         success: true,
       };
     });
