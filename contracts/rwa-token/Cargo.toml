@@ -1,6 +1,6 @@
 [package]
 name = "rwa-token"
-description = "RWA Token that wraps a Real-World Asset, creates a stability pool for it, and allows creating Collateralized Debt Positions (CDPs) against it."
+description = "RWA Token contract - A simplified fungible token for Real-World Assets with RWA Oracle price integration"
 version = "1.0.0"
 authors = ["Matias Aguilar <aaguilar1x@gmail.com>"]
 license = "Apache-2.0"

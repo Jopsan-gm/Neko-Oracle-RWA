@@ -1,24 +1,20 @@
 #![no_std]
-use soroban_sdk::{self, contracttype};
 
-mod collateralized;
+mod admin;
 mod error;
-mod index_types;
-mod stability_pool;
+mod events;
+mod interfaces;
+mod oracle;
 mod storage;
-pub mod token;
+mod types;
 
 pub use error::Error;
 
-#[contracttype]
-pub struct PriceData {
-    pub price: i128,    //asset price at given point in time
-    pub timestamp: u64, //recording timestamp
-}
-
-// Import RWA Oracle WASM for our RWA assets (Treasury Bonds, Real Estate, etc.)
+// Import RWA Oracle WASM for reading RWA asset prices
 pub mod rwa_oracle {
     soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/rwa_oracle.wasm");
 }
+
+pub mod token;
 
 mod test;
