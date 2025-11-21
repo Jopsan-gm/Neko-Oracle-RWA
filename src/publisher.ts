@@ -1,7 +1,10 @@
-// publisher.ts — FINAL TESTNET VERSION using your generated Client binding
-
-import { Keypair, rpc, Networks } from "@stellar/stellar-sdk";
-import { Client, type Asset } from "oracle"; // your binding
+import {
+  Keypair,
+  rpc,
+  Networks,
+  TransactionBuilder,
+} from "@stellar/stellar-sdk";
+import { Client, type Asset } from "oracle";
 
 export interface PublishParams {
   assetId: string; // e.g. "TSLA"
@@ -20,7 +23,6 @@ export class SorobanPublisher {
   private server: rpc.Server;
   private keypair: Keypair;
   private networkPassphrase: string;
-
   constructor(rpcUrl: string, contractId: string, secretKey: string) {
     this.keypair = Keypair.fromSecret(secretKey);
 
@@ -50,6 +52,7 @@ export class SorobanPublisher {
   }
 
   async publishToOracle(params: PublishParams): Promise<PublishResult> {
+    console.log("Keypair:", this.keypair);
     console.log("\n[PUBLISH] Preparing on-chain price update…");
     console.log("  Asset:", params.assetId);
     console.log("  Price (i128):", params.price.toString());
@@ -64,27 +67,48 @@ export class SorobanPublisher {
         timestamp: params.timestamp,
       },
       {
-        fee: 300000, // safe fee for testnet
+        fee: 300000,
         simulate: true,
       }
     );
 
-    console.log("[PUBLISH] Simulation succeeded.");
+    // 2) SIGN (new SDK requires signTransaction wrapper)
+    await tx.sign({
+      signTransaction: async (xdr: string) => {
+        // Parse XDR string to Transaction, sign it, and return signed XDR
+        const transaction = TransactionBuilder.fromXDR(
+          xdr,
+          this.networkPassphrase
+        );
+        transaction.sign(this.keypair);
+        return {
+          signedTxXdr: transaction.toXDR(),
+        };
+      },
+    });
 
-    // 2) Sign
-    tx.sign(this.keypair);
-
-    // 3) Send TX
+    // 3) SEND TX
     const sendResult = await tx.send();
 
-    console.log("[PUBLISH] TX sent. Hash:", sendResult.hash);
+    // Get hash from sendTransactionResponse
+    const txHash = sendResult.sendTransactionResponse?.hash;
+    if (!txHash) {
+      console.error("[PUBLISH] Failed to get transaction hash");
+      console.error(
+        "[PUBLISH] Send result:",
+        JSON.stringify(sendResult, null, 2)
+      );
+      throw new Error("Transaction send failed: no hash returned");
+    }
+
+    console.log("[PUBLISH] TX sent. Hash:", txHash);
 
     // 4) Wait for confirmation (poll)
-    let result = await this.server.getTransaction(sendResult.hash);
+    let result = await this.server.getTransaction(txHash);
 
     while (result.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      result = await this.server.getTransaction(sendResult.hash);
+      result = await this.server.getTransaction(txHash);
     }
 
     if (result.status === rpc.Api.GetTransactionStatus.FAILED) {
@@ -95,7 +119,7 @@ export class SorobanPublisher {
     console.log("[PUBLISH] TX confirmed on TESTNET.");
 
     return {
-      txHash: sendResult.hash,
+      txHash: txHash,
       success: true,
     };
   }
