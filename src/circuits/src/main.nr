@@ -44,8 +44,8 @@ fn main(
     p1: u64,
     p2: u64,
     p3: u64,
-    asset_id: pub Field,
-) -> pub (u64, Field) {
+    asset_id: pub str<4>,
+) -> pub (u64, str<4>) {
     assert(p1 > 0);
     assert(p2 > 0);
     assert(p3 > 0);
@@ -79,7 +79,7 @@ fn main(
 
 #[test]
 fn test_main() {
-    let asset_id = Field::from(1);
+    let asset_id: str<4> = "TSLA";
     
     // Test Case 1: All three feeds agree (within 7%)
     let (price, id) = main(100, 105, 102, asset_id);
@@ -100,6 +100,12 @@ fn test_main() {
     let (price4, id4) = main(200, 100, 105, asset_id);
     assert(price4 == 102); // (100 + 105) / 2 = 102
     assert(id4 == asset_id);
+    
+    // Test with 3-character ticker (padded to 4)
+    let asset_id_3: str<4> = "BTC ";
+    let (price5, id5) = main(50000, 50100, 50050, asset_id_3);
+    assert(price5 == 50050);
+    assert(id5 == asset_id_3);
 }
 
 #[test]

@@ -1,2 +1,8 @@
 node_modules
 .env
+target
+
+# Noir circuit artifacts
+src/circuits/Prover.toml
+src/circuits/Verifier.toml
+src/circuits/circuit.json
