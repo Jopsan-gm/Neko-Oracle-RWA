@@ -1,45 +1,135 @@
-<img width="2940" height="770" alt="image" src="https://github.com/user-attachments/assets/7f6504f2-1849-4507-9216-5f413b0e32c2" />
+# Turborepo starter
 
-# RWA Oracle (Stellar)
+This Turborepo starter is maintained by the Turborepo core team.
 
-This repository contains an early PoC implementation of the Neko Protocol RWA price oracle for the Stellar ecosystem. The goal is to provide trust‑minimized, verifiable pricing data for tokenized real‑world assets (RWAs) such as equities, bonds, and other financial instruments.
+## Using this example
 
-Although this version focuses on simplicity, the architecture is designed to evolve toward higher security and more resilient data ingestion.
+Run the following command:
 
-## Overview
+```sh
+npx create-turbo@latest
+```
 
-The oracle fetches asset prices from multiple independent API providers. We make sure of the following:
+## What's inside?
 
-* The two or more feeds are close enough to each other according to a predefined tolerance rule.
-* A final aggregated price was computed correctly.
+This Turborepo includes the following packages/apps:
 
-The on‑chain smart contract (Soroban) verifies the proof and updates the RWA price stored in the protocol.
+### Apps and Packages
 
-This design allows Neko Protocol to operate a lending and borrowing system backed by real‑world assets.
+- `docs`: a [Next.js](https://nextjs.org/) app
+- `web`: another [Next.js](https://nextjs.org/) app
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-## How It Works
+Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
-1. **Fetch Prices:** Off‑chain oracle service retrieves price data for the asset from multiple independent APIs.
-2. **Validate Consistency:** Check sources fall within the configured tolerance window; reject if not.
-3. **Aggregate:** Compute the agreed price (e.g. median or trimmed mean) from accepted feeds.
-4. **Submit Price:** Publish the aggregated price to the Soroban contract via a transaction.
-5. **Consume:** Lending/borrowing contracts read the stored RWA price to evaluate collateral and liquidation thresholds.
+### Utilities
 
-## Current Limitations (Roadmap)
+This Turborepo has some additional tools already setup for you:
 
-This initial implementation is intentionally lightweight. The roadmap includes:
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
 
-* Integrating more than five data sources.
-* Implementing feed attestation, signatures, and Merkle proofs.
-* Adding detection for outliers and adversarial price behavior.
-* Introducing distributed oracle operators and proof rotation.
-* Deploying a high‑availability, fault‑tolerant oracle relay.
-* Expanding support to additional RWA categories (treasuries, corporate bonds, commodities).
+### Build
 
-## Architecture Diagram
+To build all apps and packages, run the following command:
 
-<img width="300" height="1000" alt="Diagram RWA Lending" src="https://github.com/user-attachments/assets/125c403a-07c7-4453-85f6-a29343bf62a1" />
+```
+cd my-turborepo
 
-## License
+# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+turbo build
 
-MIT License.
+# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
+npx turbo build
+yarn dlx turbo build
+pnpm exec turbo build
+```
+
+You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+
+```
+# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+turbo build --filter=docs
+
+# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
+npx turbo build --filter=docs
+yarn exec turbo build --filter=docs
+pnpm exec turbo build --filter=docs
+```
+
+### Develop
+
+To develop all apps and packages, run the following command:
+
+```
+cd my-turborepo
+
+# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+turbo dev
+
+# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
+npx turbo dev
+yarn exec turbo dev
+pnpm exec turbo dev
+```
+
+You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+
+```
+# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+turbo dev --filter=web
+
+# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
+npx turbo dev --filter=web
+yarn exec turbo dev --filter=web
+pnpm exec turbo dev --filter=web
+```
+
+### Remote Caching
+
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+
+Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+
+```
+cd my-turborepo
+
+# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+turbo login
+
+# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
+npx turbo login
+yarn exec turbo login
+pnpm exec turbo login
+```
+
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+```
+# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+turbo link
+
+# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
+npx turbo link
+yarn exec turbo link
+pnpm exec turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
+- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
+- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
+- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
+- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
+- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
