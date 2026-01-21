@@ -1,135 +1,119 @@
-# Turborepo starter
+# 📌 Stellar Stock Price Oracle
 
-This Turborepo starter is maintained by the Turborepo core team.
+An open-source **off-chain oracle system** that provides **real-world stock price data** to the **Stellar network** in a secure, modular, SEP-compliant way.
 
-## Using this example
+## 🎯 What this Project Does
 
-Run the following command:
+This project fetches stock prices from multiple external financial APIs, normalizes and aggregates them, cryptographically signs the results, exposes them via a backend API, and supports on-chain submission to a Stellar oracle contract, so smart contracts can depend on real stock prices.
 
-```sh
-npx create-turbo@latest
-```
+The goal is to make this **reliable, testable, and extensible**, with each part implemented as a separate app or package in this monorepo.
 
-## What's inside?
+## 🏗️ High-Level Architecture
 
-This Turborepo includes the following packages/apps:
+The system consists of the following stages:
 
-### Apps and Packages
+1. **Ingestor** - Connects to external stock price APIs
+2. **Aggregator** - Normalizes, filters, and aggregates data
+3. **Signer** - Produces signed proofs of aggregated prices
+4. **API Publisher** - Exposes a REST/WebSocket endpoint
+5. **Transactor** - Submits signed data on-chain
+6. **Smart Contracts** - SEP-compliant Oracle on Stellar
+7. **Frontend Demo** - UI for visualizing feeds
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Data flows from raw external sources → ingestor → aggregator → signer → API → on-chain oracle.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## 🗂️ Monorepo Layout
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+/oracle-stocks-monorepo
+├── apps/
+│   ├── ingestor/        # Connects to external stock price APIs
+│   ├── aggregator/      # Normalizes, filters, and aggregates data
+│   ├── api/             # REST/WebSocket API endpoint
+│   ├── transactor/      # Submits signed data on-chain
+│   ├── frontend/        # UI for visualizing feeds
+│   └── smart-contracts/ # SEP-compliant Oracle on Stellar
+├── packages/
+│   ├── shared/          # Shared utilities, types, and constants
+│   └── signer/          # Cryptographic signing of price data
+├── tests/               # Integration and E2E tests
+├── docs/                # Documentation
+├── infra/               # Infrastructure as code
+├── .github/             # GitHub workflows and templates
+├── turbo.json           # Turborepo configuration
+└── README.md
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## 📌 How We Work
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+Each app will be developed **one by one using issue prompts** that include:
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- Context and goals
+- Expected inputs and outputs
+- Tech stack and conventions
+- Acceptance criteria
+- Minimal scaffolding (just enough to get started)
 
-### Develop
+We will **not build everything at once** — each issue will introduce the next piece.
 
-To develop all apps and packages, run the following command:
+## 🧑‍💻 Contributions
 
-```
-cd my-turborepo
+Contributors should:
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+1. Read the contextual issue
+2. Understand how their module fits into the architecture
+3. Implement the minimum viable feature first
+4. Add tests and documentation
+5. Submit PRs with clear description
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## 🚀 Getting Started
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### Prerequisites
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+- Node.js >= 18
+- npm >= 9
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+### Installation
+
+```bash
+npm install
 ```
 
-### Remote Caching
+### Development
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+```bash
+# Run all apps in development mode
+npm run dev
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+# Run a specific app
+npm run dev --filter=@oracle-stocks/ingestor
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+# Build all apps and packages
+npm run build
 
-```
-cd my-turborepo
+# Lint all code
+npm run lint
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+# Type check
+npm run check-types
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## 📚 Documentation
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+See the [docs/](./docs/) directory for detailed documentation.
 
+## 🧪 Testing
+
+Integration and end-to-end tests are located in the [tests/](./tests/) directory.
+
+```bash
+# Run all tests
+npm test
+
+# Run tests for a specific package
+npm test --filter=@oracle-stocks/shared
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## 📄 License
 
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+[Add your license here]
